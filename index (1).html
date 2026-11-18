@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR Menu Maker</title>
+<meta name="description" content="Make a digital menu and QR code for your restaurant or shop in a minute.">
+<style>
+:root{--bg:#f4f6f1;--card:#fff;--ink:#14213d;--mut:#5d6578;--acc:#0f766e;--acc2:#e8a200;--line:#dde2d8;--veg:#16a34a;--non:#b91c1c;--btn:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1720;--card:#17212d;--ink:#eef2f7;--mut:#9aa6b8;--acc:#2dd4bf;--acc2:#fbbf24;--line:#2a3646;--btn:#06201d}}
+body[data-t="1"]{--acc:#c2410c;--acc2:#f59e0b;--btn:#fff}
+body[data-t="2"]{--acc:#9d174d;--acc2:#f472b6;--btn:#fff}
+body[data-t="3"]{--bg:#111827;--card:#1f2937;--ink:#f9fafb;--mut:#9ca3af;--acc:#fbbf24;--acc2:#fbbf24;--line:#374151;--btn:#111827}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI","Noto Sans Devanagari","Noto Sans Gujarati",Roboto,sans-serif;padding:16px;max-width:560px;margin:0 auto;padding-bottom:48px}
+h1,h2,h3{font-family:Georgia,"Times New Roman","Noto Serif Devanagari","Noto Serif Gujarati",serif;line-height:1.25;margin:0}
+h1{font-size:28px}
+h2{font-size:20px;margin-bottom:10px}
+p{margin:0}
+.mut{color:var(--mut);font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+label{display:block;font-size:14px;font-weight:600;margin:12px 0 4px}
+input,select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:44px}
+input:focus,select:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.row{display:flex;gap:10px}
+.row>*{flex:1;min-width:0}
+button,.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:12px 16px;min-height:44px;cursor:pointer;background:var(--acc);color:var(--btn);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;text-align:center}
+button.alt,.btn.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.full,.btn.full{width:100%;margin-top:12px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.langs{display:flex;gap:8px;margin-bottom:12px}
+.langs button{flex:1;padding:8px;min-height:40px}
+.langs button.on{background:var(--acc);color:var(--btn);border-color:var(--acc)}
+.item{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.item .nm{flex:1;min-width:0;overflow-wrap:anywhere}
+.item .del{background:transparent;color:var(--non);padding:6px 10px;min-height:36px;border:1px solid var(--line)}
+.dot{width:14px;height:14px;border:2px solid var(--veg);border-radius:3px;display:inline-grid;place-items:center;flex:none}
+.dot::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--veg)}
+.dot.n{border-color:var(--non)}
+.dot.n::after{background:var(--non)}
+.cat{font-weight:700;font-size:13px;color:var(--acc);margin-top:14px}
+.logoRow{display:flex;align-items:center;gap:12px}
+.logoRow img{width:56px;height:56px;border-radius:50%;object-fit:cover;border:1px solid var(--line)}
+#qrOut{text-align:center}
+#qrCanvas{width:100%;max-width:300px;height:auto;border-radius:10px;border:1px solid var(--line);background:#fff}
+.err{color:var(--non);font-size:14px;margin-top:8px}
+.ok{color:var(--acc);font-size:14px;margin-top:8px}
+.mhead{padding:20px 4px 8px;display:flex;align-items:center;gap:14px}
+.mhead img{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--acc2)}
+.mhead h1{font-size:30px}
+.mcat{margin-top:22px}
+.mcat h3{font-size:19px;padding-bottom:6px;border-bottom:2px solid var(--acc2);display:inline-block}
+.mitem{display:flex;gap:10px;align-items:baseline;padding:12px 0;border-bottom:1px dashed var(--line)}
+.mitem .dot{transform:translateY(2px)}
+.mitem .nm{flex:1;overflow-wrap:anywhere}
+.mitem .pr{font-weight:700;white-space:nowrap}
+.hidden{display:none!important}
+.foot{margin-top:28px;text-align:center}
+.foot a{color:var(--mut);font-size:14px}
+</style>
+</head>
+<body>
+
+<!-- BUILDER -->
+<main id="builder">
+  <div class="langs" id="langs">
+    <button type="button" data-l="en">English</button>
+    <button type="button" data-l="hi">हिन्दी</button>
+    <button type="button" data-l="gu">ગુજરાતી</button>
+  </div>
+  <h1 data-i="title"></h1>
+  <p class="mut" style="margin-top:6px" data-i="sub"></p>
+
+  <section class="card">
+    <h2 data-i="shop"></h2>
+    <label for="shopName" data-i="shopName"></label>
+    <input id="shopName" maxlength="60" autocomplete="off">
+    <label for="shopWa" data-i="wa"></label>
+    <input id="shopWa" inputmode="numeric" maxlength="15" placeholder="919876543210" autocomplete="off">
+    <label data-i="logo"></label>
+    <div class="logoRow">
+      <img id="logoPrev" class="hidden" alt="">
+      <input id="logoIn" type="file" accept="image/*">
+      <button type="button" class="alt hidden" id="logoDel" data-i="remove"></button>
+    </div>
+    <div class="row">
+      <div>
+        <label for="theme" data-i="theme"></label>
+        <select id="theme">
+          <option value="0" data-i="t0"></option>
+          <option value="1" data-i="t1"></option>
+          <option value="2" data-i="t2"></option>
+          <option value="3" data-i="t3"></option>
+        </select>
+      </div>
+      <div>
+        <label for="mlang" data-i="mlang"></label>
+        <select id="mlang">
+          <option value="en">English</option>
+          <option value="hi">हिन्दी</option>
+          <option value="gu">ગુજરાતી</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 data-i="addH"></h2>
+    <label for="itCat" data-i="cat"></label>
+    <input id="itCat" maxlength="30" list="catList" autocomplete="off">
+    <datalist id="catList"></datalist>
+    <label for="itName" data-i="name"></label>
+    <input id="itName" maxlength="50" autocomplete="off">
+    <div class="row">
+      <div>
+        <label for="itPrice" data-i="price"></label>
+        <input id="itPrice" inputmode="decimal" maxlength="7" placeholder="80">
+      </div>
+      <div>
+        <label for="itVeg" data-i="type"></label>
+        <select id="itVeg"><option value="1" data-i="veg"></option><option value="0" data-i="non"></option></select>
+      </div>
+    </div>
+    <button class="full" id="addBtn" type="button" data-i="add"></button>
+    <p class="err hidden" id="addErr"></p>
+  </section>
+
+  <section class="card">
+    <h2><span data-i="yourMenu"></span> <span class="mut" id="count"></span></h2>
+    <div id="list"></div>
+  </section>
+
+  <section class="card">
+    <h2 data-i="qrH"></h2>
+    <label for="site" data-i="site"></label>
+    <input id="site" inputmode="url" placeholder="https://myshop.vercel.app" autocomplete="off">
+    <p class="mut" style="margin-top:4px" data-i="siteHint"></p>
+    <button class="full" id="genBtn" type="button"></button>
+    <p class="err hidden" id="genErr"></p>
+    <div id="qrOut" class="hidden">
+      <p class="ok" id="modeNote"></p>
+      <canvas id="qrCanvas" width="400" height="400" style="margin-top:12px"></canvas>
+      <div class="actions">
+        <a class="btn" id="dlBtn" download="menu-qr.png" data-i="download"></a>
+        <button class="alt" id="copyBtn" type="button" data-i="copy"></button>
+        <a class="btn alt" id="openBtn" href="#" data-i="open"></a>
+        <a class="btn alt" id="shareBtn" target="_blank" rel="noopener" href="#" data-i="share"></a>
+      </div>
+      <p class="ok hidden" id="copyOk" data-i="copied"></p>
+    </div>
+  </section>
+</main>
+
+<!-- CUSTOMER MENU -->
+<main id="menu" class="hidden">
+  <header class="mhead">
+    <img id="mLogo" class="hidden" alt="">
+    <div><h1 id="mName"></h1><p class="mut" id="mSub"></p></div>
+  </header>
+  <div id="mBody"></div>
+  <a class="btn full hidden" id="orderBtn" target="_blank" rel="noopener" href="#"></a>
+  <div class="foot"><a href="#" id="makeOwn"></a></div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var KEY = "qrmenu_v2";
+  var L = {
+    en:{title:"QR menu maker",sub:"Add your items, get a QR code, print it. Customers scan and see your menu.",shop:"Your shop",shopName:"Shop or restaurant name",wa:"WhatsApp number for orders (optional)",logo:"Logo (optional)",theme:"Colour theme",t0:"Teal",t1:"Saffron",t2:"Berry",t3:"Night",mlang:"Menu language",addH:"Add an item",cat:"Category",name:"Item name",price:"Price (₹)",type:"Type",veg:"Veg",non:"Non-veg",add:"Add item",yourMenu:"Your menu",empty:"No items yet. Add your first item above.",remove:"Remove",qrH:"Get your QR code",site:"Your website address",siteHint:"Use your own Vercel link, like https://myshop.vercel.app",create:"Create QR code",update:"Update menu (same QR)",download:"Download QR",copy:"Copy menu link",open:"Open menu",share:"Share on WhatsApp",copied:"Link copied.",order:"Order on WhatsApp",makeOwn:"Make a free QR menu for your shop",items:"items",eName:"Enter the item name.",ePrice:"Enter a valid price, like 80.",eShop:"Enter your shop name first.",eNone:"Add at least one item first.",eBig:"Menu is too large for one QR code. Remove some items, or connect the database.",eSite:"Enter your website address starting with https://",eKey:"This menu belongs to another phone. Clear the saved menu ID or use the original phone.",live:"Live menu. Edit anytime and tap Update. This QR never changes.",linkMode:"Link menu (no database connected). Changing items needs a new QR.",notFound:"Menu not found.",loading:"Loading menu..."},
+    hi:{title:"क्यूआर मेनू मेकर",sub:"अपने आइटम जोड़ें, क्यूआर कोड बनाएं और प्रिंट करें। ग्राहक स्कैन करके मेनू देखेंगे।",shop:"आपकी दुकान",shopName:"दुकान या रेस्तरां का नाम",wa:"ऑर्डर के लिए व्हाट्सऐप नंबर (वैकल्पिक)",logo:"लोगो (वैकल्पिक)",theme:"रंग थीम",t0:"हरा-नीला",t1:"केसरिया",t2:"बैंगनी-गुलाबी",t3:"रात",mlang:"मेनू की भाषा",addH:"आइटम जोड़ें",cat:"श्रेणी",name:"आइटम का नाम",price:"कीमत (₹)",type:"प्रकार",veg:"शाकाहारी",non:"मांसाहारी",add:"आइटम जोड़ें",yourMenu:"आपका मेनू",empty:"अभी कोई आइटम नहीं। ऊपर पहला आइटम जोड़ें।",remove:"हटाएं",qrH:"अपना क्यूआर कोड पाएं",site:"आपकी वेबसाइट का पता",siteHint:"अपना Vercel लिंक डालें, जैसे https://myshop.vercel.app",create:"क्यूआर कोड बनाएं",update:"मेनू अपडेट करें (वही क्यूआर)",download:"क्यूआर डाउनलोड करें",copy:"मेनू लिंक कॉपी करें",open:"मेनू खोलें",share:"व्हाट्सऐप पर भेजें",copied:"लिंक कॉपी हो गया।",order:"व्हाट्सऐप पर ऑर्डर करें",makeOwn:"अपनी दुकान के लिए मुफ़्त क्यूआर मेनू बनाएं",items:"आइटम",eName:"आइटम का नाम लिखें।",ePrice:"सही कीमत लिखें, जैसे 80।",eShop:"पहले दुकान का नाम लिखें।",eNone:"पहले कम से कम एक आइटम जोड़ें।",eBig:"मेनू एक क्यूआर के लिए बहुत बड़ा है। कुछ आइटम हटाएं, या डेटाबेस जोड़ें।",eSite:"https:// से शुरू होने वाला वेबसाइट पता लिखें।",eKey:"यह मेनू किसी दूसरे फ़ोन का है।",live:"लाइव मेनू। कभी भी बदलें और अपडेट दबाएं। यह क्यूआर नहीं बदलेगा।",linkMode:"लिंक मेनू (डेटाबेस जुड़ा नहीं है)। आइटम बदलने पर नया क्यूआर चाहिए।",notFound:"मेनू नहीं मिला।",loading:"मेनू लोड हो रहा है..."},
+    gu:{title:"QR મેનુ મેકર",sub:"તમારી આઇટમ ઉમેરો, QR કોડ બનાવો અને પ્રિન્ટ કરો. ગ્રાહકો સ્કેન કરીને મેનુ જોશે.",shop:"તમારી દુકાન",shopName:"દુકાન કે રેસ્ટોરન્ટનું નામ",wa:"ઓર્ડર માટે વોટ્સએપ નંબર (વૈકલ્પિક)",logo:"લોગો (વૈકલ્પિક)",theme:"રંગ થીમ",t0:"લીલો-વાદળી",t1:"કેસરી",t2:"જાંબલી-ગુલાબી",t3:"રાત્રિ",mlang:"મેનુની ભાષા",addH:"આઇટમ ઉમેરો",cat:"શ્રેણી",name:"આઇટમનું નામ",price:"કિંમત (₹)",type:"પ્રકાર",veg:"શાકાહારી",non:"માંસાહારી",add:"આઇટમ ઉમેરો",yourMenu:"તમારું મેનુ",empty:"હજી કોઈ આઇટમ નથી. ઉપર પહેલી આઇટમ ઉમેરો.",remove:"કાઢી નાખો",qrH:"તમારો QR કોડ મેળવો",site:"તમારી વેબસાઇટનું સરનામું",siteHint:"તમારી Vercel લિંક લખો, જેમ કે https://myshop.vercel.app",create:"QR કોડ બનાવો",update:"મેનુ અપડેટ કરો (એ જ QR)",download:"QR ડાઉનલોડ કરો",copy:"મેનુ લિંક કોપી કરો",open:"મેનુ ખોલો",share:"વોટ્સએપ પર મોકલો",copied:"લિંક કોપી થઈ ગઈ.",order:"વોટ્સએપ પર ઓર્ડર કરો",makeOwn:"તમારી દુકાન માટે મફત QR મેનુ બનાવો",items:"આઇટમ",eName:"આઇટમનું નામ લખો.",ePrice:"સાચી કિંમત લખો, જેમ કે 80.",eShop:"પહેલા દુકાનનું નામ લખો.",eNone:"પહેલા ઓછામાં ઓછી એક આઇટમ ઉમેરો.",eBig:"મેનુ એક QR માટે ખૂબ મોટું છે. થોડી આઇટમ કાઢો, અથવા ડેટાબેઝ જોડો.",eSite:"https:// થી શરૂ થતું વેબસાઇટ સરનામું લખો.",eKey:"આ મેનુ બીજા ફોનનું છે.",live:"લાઇવ મેનુ. ગમે ત્યારે બદલો અને અપડેટ દબાવો. આ QR બદલાશે નહીં.",linkMode:"લિંક મેનુ (ડેટાબેઝ જોડાયેલો નથી). આઇટમ બદલવા નવો QR જોઈશે.",notFound:"મેનુ મળ્યું નથી.",loading:"મેનુ લોડ થઈ રહ્યું છે..."}
+  };
+  var ui = "en";
+  var data = { n:"", w:"", l:"en", t:0, g:"", i:[], id:"", key:"", base:"", ui:"en" };
+
+  function t(k, l){ return (L[l || ui] && L[l || ui][k]) || L.en[k] || k; }
+  function load(){
+    try { var s = localStorage.getItem(KEY); if (s){ var d = JSON.parse(s); if (d && Array.isArray(d.i)) for (var k in d) data[k] = d[k]; } } catch(e){}
+    ui = data.ui || "en";
+  }
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(data)); } catch(e){} }
+  function el(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function showErr(id, msg){ var e = $(id); e.textContent = msg || ""; e.classList.toggle("hidden", !msg); }
+  function applyTheme(n){ if (n) document.body.setAttribute("data-t", n); else document.body.removeAttribute("data-t"); }
+  function okLogo(s){ return typeof s === "string" && s.indexOf("data:image/jpeg;base64,") === 0; }
+
+  /* ---------- language ---------- */
+  function applyLang(){
+    document.documentElement.lang = ui;
+    [].forEach.call(document.querySelectorAll("[data-i]"), function(e){ e.textContent = t(e.getAttribute("data-i")); });
+    [].forEach.call(document.querySelectorAll("#langs button"), function(b){ b.classList.toggle("on", b.getAttribute("data-l") === ui); });
+    $("genBtn").textContent = data.id ? t("update") : t("create");
+    renderList();
+  }
+
+  /* ---------- builder list ---------- */
+  function renderList(){
+    var list = $("list"); list.textContent = "";
+    $("count").textContent = data.i.length ? "(" + data.i.length + ")" : "";
+    if (!data.i.length){ list.appendChild(el("p", "mut", t("empty"))); }
+    else {
+      var cats = [];
+      data.i.forEach(function(it){ if (cats.indexOf(it[0]) < 0) cats.push(it[0]); });
+      cats.forEach(function(c){
+        list.appendChild(el("div", "cat", c));
+        data.i.forEach(function(it, idx){
+          if (it[0] !== c) return;
+          var row = el("div", "item");
+          row.appendChild(el("span", it[3] ? "dot" : "dot n"));
+          row.appendChild(el("span", "nm", it[1]));
+          row.appendChild(el("strong", "", "₹" + it[2]));
+          var del = el("button", "del", t("remove")); del.type = "button";
+          del.addEventListener("click", function(){ data.i.splice(idx, 1); save(); renderList(); });
+          row.appendChild(del); list.appendChild(row);
+        });
+      });
+    }
+    var dl = $("catList"); dl.textContent = ""; var seen = {};
+    data.i.forEach(function(it){ if (seen[it[0]]) return; seen[it[0]] = 1; var o = document.createElement("option"); o.value = it[0]; dl.appendChild(o); });
+  }
+
+  function addItem(){
+    var cat = $("itCat").value.trim() || "Menu";
+    var name = $("itName").value.trim();
+    var price = $("itPrice").value.trim().replace(/[^0-9.]/g, "");
+    if (!name){ showErr("addErr", t("eName")); return; }
+    if (!price || isNaN(parseFloat(price))){ showErr("addErr", t("ePrice")); return; }
+    showErr("addErr", "");
+    data.i.push([cat, name, String(parseFloat(price)), $("itVeg").value === "1" ? 1 : 0]);
+    $("itName").value = ""; $("itPrice").value = "";
+    save(); renderList(); $("itName").focus();
+  }
+
+  /* ---------- logo ---------- */
+  function showLogo(){
+    var has = okLogo(data.g);
+    $("logoPrev").classList.toggle("hidden", !has);
+    $("logoDel").classList.toggle("hidden", !has);
+    if (has) $("logoPrev").src = data.g;
+  }
+  function pickLogo(){
+    var f = $("logoIn").files && $("logoIn").files[0];
+    if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function(){
+      var img = new Image();
+      img.onload = function(){
+        var s = 96, cv = document.createElement("canvas"); cv.width = s; cv.height = s;
+        var c = cv.getContext("2d"), m = Math.min(img.width, img.height);
+        c.fillStyle = "#fff"; c.fillRect(0, 0, s, s);
+        c.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, s, s);
+        data.g = cv.toDataURL("image/jpeg", 0.7); save(); showLogo();
+      };
+      img.src = rd.result;
+    };
+    rd.readAsDataURL(f);
+  }
+
+  /* ---------- QR ---------- */
+  function drawQr(text){
+    var qr = qrcode(0, "L"); qr.addData(text); qr.make();
+    var n = qr.getModuleCount(), quiet = 4, cell = Math.floor(400 / (n + quiet * 2)), total = cell * (n + quiet * 2);
+    var cv = $("qrCanvas"); cv.width = total; cv.height = total;
+    var ctx = cv.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, total, total); ctx.fillStyle = "#000";
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (qr.isDark(r, c)) ctx.fillRect((c + quiet) * cell, (r + quiet) * cell, cell, cell);
+  }
+
+  var currentLink = "";
+  async function generate(){
+    data.n = $("shopName").value.trim();
+    data.w = $("shopWa").value.replace(/\D/g, "");
+    data.t = parseInt($("theme").value, 10) || 0;
+    data.l = $("mlang").value;
+    var base = $("site").value.trim().replace(/[#?].*$/, "").replace(/\/+$/, "");
+    showErr("genErr", ""); $("qrOut").classList.add("hidden");
+    if (!data.n){ showErr("genErr", t("eShop")); return; }
+    if (!data.i.length){ showErr("genErr", t("eNone")); return; }
+    if (!/^https?:\/\/[^\s\/]+\.[^\s\/]+/i.test(base)){ showErr("genErr", t("eSite")); return; }
+    data.base = base; save();
+
+    var payload = { n:data.n, w:data.w, l:data.l, t:data.t, i:data.i };
+    if (okLogo(data.g)) payload.g = data.g;
+    var live = false;
+    try {
+      var r = await fetch("/api/menu", { method:"POST", headers:{ "Content-Type":"application/json" }, body:JSON.stringify({ id:data.id || undefined, key:data.key || undefined, data:payload }) });
+      if (r.ok){ var j = await r.json(); data.id = j.id; data.key = j.key; save(); currentLink = base + "/#id=" + j.id; live = true; }
+      else if (r.status === 403){ showErr("genErr", t("eKey")); return; }
+    } catch(e){}
+    if (!live){
+      delete payload.g;
+      currentLink = base + "/#m=" + LZString.compressToEncodedURIComponent(JSON.stringify(payload));
+    }
+    try { drawQr(currentLink); } catch(e){ showErr("genErr", t("eBig")); return; }
+    $("dlBtn").href = $("qrCanvas").toDataURL("image/png");
+    $("openBtn").href = currentLink;
+    $("shareBtn").href = "https://wa.me/?text=" + encodeURIComponent(data.n + ": " + currentLink);
+    $("modeNote").textContent = live ? t("live") : t("linkMode");
+    $("genBtn").textContent = data.id ? t("update") : t("create");
+    $("copyOk").classList.add("hidden");
+    $("qrOut").classList.remove("hidden");
+    $("qrOut").scrollIntoView({ behavior:"smooth", block:"nearest" });
+  }
+
+  function copyLink(){
+    function done(){ $("copyOk").classList.remove("hidden"); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(currentLink).then(done, function(){ window.prompt("", currentLink); });
+    else window.prompt("", currentLink);
+  }
+
+  /* ---------- customer menu ---------- */
+  function showMenu(d){
+    var lg = L[d.l] ? d.l : "en";
+    $("builder").classList.add("hidden"); $("menu").classList.remove("hidden");
+    applyTheme(parseInt(d.t, 10) || 0);
+    document.documentElement.lang = lg;
+    document.title = d.n + " | Menu";
+    $("mName").textContent = d.n;
+    $("mSub").textContent = d.i.length + " " + t("items", lg);
+    $("makeOwn").textContent = t("makeOwn", lg);
+    var lo = $("mLogo");
+    if (okLogo(d.g)){ lo.src = d.g; lo.classList.remove("hidden"); } else lo.classList.add("hidden");
+    var body = $("mBody"); body.textContent = ""; var cats = [];
+    d.i.forEach(function(it){ if (cats.indexOf(it[0]) < 0) cats.push(it[0]); });
+    cats.forEach(function(c){
+      var sec = el("section", "mcat"); sec.appendChild(el("h3", "", c));
+      d.i.forEach(function(it){
+        if (it[0] !== c) return;
+        var row = el("div", "mitem");
+        row.appendChild(el("span", it[3] ? "dot" : "dot n"));
+        row.appendChild(el("span", "nm", it[1]));
+        row.appendChild(el("span", "pr", "₹" + it[2]));
+        sec.appendChild(row);
+      });
+      body.appendChild(sec);
+    });
+    var ob = $("orderBtn"), w = String(d.w || "").replace(/\D/g, "");
+    if (w){
+      ob.textContent = t("order", lg);
+      ob.href = "https://wa.me/" + w + "?text=" + encodeURIComponent(d.n + ":");
+      ob.classList.remove("hidden");
+    } else ob.classList.add("hidden");
+  }
+
+  function showBuilder(){
+    $("menu").classList.add("hidden"); $("builder").classList.remove("hidden");
+    applyTheme(0); document.title = "QR Menu Maker"; applyLang();
+  }
+
+  function route(){
+    var h = location.hash;
+    if (h.indexOf("#m=") === 0){
+      try {
+        var d = JSON.parse(LZString.decompressFromEncodedURIComponent(h.slice(3)));
+        if (d && d.n && Array.isArray(d.i)){ showMenu(d); window.scrollTo(0, 0); return; }
+      } catch(e){}
+    }
+    if (h.indexOf("#id=") === 0){
+      var id = h.slice(4);
+      if (/^[a-z0-9]{6,12}$/.test(id)){
+        $("builder").classList.add("hidden"); $("menu").classList.remove("hidden");
+        $("mName").textContent = t("loading"); $("mSub").textContent = ""; $("mBody").textContent = "";
+        fetch("/api/menu?id=" + id, { cache:"no-store" })
+          .then(function(r){ if (!r.ok) throw 0; return r.json(); })
+          .then(function(d){ if (location.hash === h) { showMenu(d); window.scrollTo(0, 0); } })
+          .catch(function(){ $("mName").textContent = t("notFound"); });
+        return;
+      }
+    }
+    showBuilder();
+  }
+
+  /* ---------- start ---------- */
+  load();
+  $("shopName").value = data.n || "";
+  $("shopWa").value = data.w || "";
+  $("theme").value = String(data.t || 0);
+  $("mlang").value = data.l || "en";
+  $("site").value = data.base || (/^https?:/.test(location.protocol) ? location.origin : "");
+  showLogo();
+  $("addBtn").addEventListener("click", addItem);
+  $("genBtn").addEventListener("click", generate);
+  $("copyBtn").addEventListener("click", copyLink);
+  $("logoIn").addEventListener("change", pickLogo);
+  $("logoDel").addEventListener("click", function(){ data.g = ""; $("logoIn").value = ""; save(); showLogo(); });
+  $("theme").addEventListener("change", function(){ data.t = parseInt(this.value, 10) || 0; save(); });
+  [].forEach.call(document.querySelectorAll("#langs button"), function(b){
+    b.addEventListener("click", function(){ ui = b.getAttribute("data-l"); data.ui = ui; save(); applyLang(); });
+  });
+  $("makeOwn").addEventListener("click", function(e){ e.preventDefault(); history.pushState("", document.title, location.href.split("#")[0]); route(); });
+  ["itName","itPrice","itCat"].forEach(function(id){
+    $(id).addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); addItem(); } });
+  });
+  window.addEventListener("hashchange", route);
+  route();
+})();
+</script>
+</body>
+</html>
